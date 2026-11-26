@@ -1,18 +1,27 @@
-# Exercice 4 – La page HTML de votre site, stockée dans le cluster.
-# Une ConfigMap contient de la configuration (ou de petits fichiers) séparée de l'image.
+# 1. Modifier le texte de configmap.yaml
+cat <<'EOF' > k8s/site/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: site-html
 data:
-  # Chaque clé devient un fichier quand la ConfigMap est montée comme volume.
   index.html: |
     <!doctype html>
     <html lang="fr">
       <head><meta charset="utf-8"><title>Mon site sur Kubernetes</title></head>
       <body>
-        <h1>Bienvenue sur mon site</h1>
-        <p>Réalisé par Selyan Boudia.</p>
+        <h1>Bienvenue sur mon site (Version 2)</h1>
+        <p>Réalisé par Selyan Boudia — Mis à jour de manière déclarative !</p>
         <p>Servi par Kubernetes.</p>
       </body>
     </html>
+EOF
+
+# 2. Appliquer le changement et forcer le redémarrage du pod
+kubectl apply -f k8s/site/
+kubectl rollout restart deploy/site
+
+# 3. Relancer le tunnel vers le nouveau pod
+pkill -f "port-forward svc/site"
+kubectl rollout status deploy/site
+kubectl port-forward svc/site 8080:80 > /tmp/site.log 2>&1 &
